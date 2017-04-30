@@ -1,11 +1,11 @@
 # django-sql-server-bcp
 A utility for using mssql-tools BCP command with Django models.
 
-# Installation
+## Installation
 
 `pip install django-sql-server-bcp`
 
-# Usage
+## Usage
 
 Example Django model:
 
@@ -56,7 +56,7 @@ Network packet size (bytes): 4096
 Clock Time (ms.) Total     : 10     Average : (49900.0 rows per sec.)
 ```
 
-# Caveats
+## Caveats
 
 - String data cannot contain commas or newlines because bulk data file format is flimsy CSV.
 - Untested with long strings, dates, binary data.
