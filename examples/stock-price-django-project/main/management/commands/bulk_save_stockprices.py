@@ -14,7 +14,7 @@ class Command(BaseCommand):
         for _ in range(1, row_count):
             rows.append(dict(
                 symbol='GOOG',
-                price='%.2f' % (1000 * random()),
+                price=1000 * random(),
                 timestamp=str(datetime.datetime.now())
             ))
 

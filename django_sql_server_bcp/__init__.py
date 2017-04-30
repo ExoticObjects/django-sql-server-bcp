@@ -1,5 +1,4 @@
-import re, os, logging
-from subprocess import check_output
+import re, os, logging, subprocess
 from tempfile import NamedTemporaryFile
 from django.conf import settings
 
@@ -37,13 +36,17 @@ class BCP(object):
         with open(outfile, 'w') as f:
             for row in rows:
                 for field in bcp_format.fields:
-                    val = row.get(self._field_column_map[field.column_name], '')
+                    model_field = self._field_column_map[field.column_name]
+                    val = row.get(model_field.name, '')
                     val = getattr(val, 'id', val) # if ForeignKey, we need id
+                    if model_field.__class__.__name__ == 'DecimalField':
+                        val = ('%.' + str(model_field.decimal_places) + 'f') % float(val)
+                    print val, field.field_length
                     f.write(str(val))
                     f.write(field.delimiter)
 
         # Do bulk import via bcp
-        import_result = check_output(self._command_args_base + ['IN', outfile] + self._db_args + ['-f', bcp_format.filename])
+        import_result = _run_cmd(self._command_args_base + ['IN', outfile] + self._db_args + ['-f', bcp_format.filename])
 
         # Cleanup temp files
         os.remove(outfile)
@@ -68,7 +71,7 @@ class BCP(object):
         if DB_DSN:
             self._db_args.append('-D')
 
-        self._field_column_map = {(f.db_column or f.name): f.name for f in target_model._meta.fields}
+        self._field_column_map = {(f.db_column or f.name): f for f in target_model._meta.fields}
 
     def _make_format(self):
         bcp_format = BCPFormat()
@@ -95,8 +98,7 @@ class BCPFormat(object):
         with NamedTemporaryFile(delete=False) as f:
             format_file = f.name
             format_args = cmd_args + ['format', 'nul', '-c', '-f', format_file, '-t,'] + db_args
-            check_output(format_args)
-        self.filename = format_file
+            _run_cmd(format_args)
         self.load(format_file)
         return format_file
 
@@ -119,6 +121,7 @@ class BCPFormat(object):
             fields.append(row_format)
 
         self.fields = fields
+        self.filename = filename
 
 
 class BCPFormatRow(object):
@@ -152,3 +155,13 @@ class BCPFormatRow(object):
         if self.data_prefix_len > 0:
             # https://docs.microsoft.com/en-us/sql/relational-databases/import-export/specify-prefix-length-in-data-files-by-using-bcp-sql-server
             raise Exception('data_prefix_length is not supported. Format file must be created using -c option')
+
+
+def _run_cmd(args):
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    returncode = process.wait()
+    out = process.stdout.read()
+    _log.debug(out)
+    if returncode != 0:
+        raise Exception('BCP command failed: %s' % args)
+    return out

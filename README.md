@@ -5,6 +5,30 @@ A utility for using mssql-tools BCP command with Django models.
 
 `pip install django-sql-server-bcp`
 
+## Requirements
+
+If on Linux or Mac, install mssql-tools
+
+- For Mac: https://blogs.technet.microsoft.com/dataplatforminsider/2017/04/03/sql-server-command-line-tools-for-mac-preview-now-available/
+- For Linux: https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools
+
+
+On Linux, you must use Microsoft's driver in your odbc.ini. Otherwise, you'll get error `The DSN specified an unsupported driver.`. 
+If you're using pyodbc, your driver might look like:
+
+```
+[my_dsn_name]
+Driver = /usr/local/lib/libtdsodbc.so
+
+```
+
+Change it to (e.g. on Ubuntu):
+
+```
+[my_dsn_name]
+Driver = /opt/microsoft/msodbcsql/lib64/libmsodbcsql-13.1.so.6.0
+```
+
 ## Usage
 
 Example Django model:
