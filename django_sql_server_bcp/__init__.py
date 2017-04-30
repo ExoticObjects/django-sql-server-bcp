@@ -37,10 +37,10 @@ class BCP(object):
             for row in rows:
                 for field in bcp_format.fields:
                     model_field = self._field_column_map[field.column_name]
-                    val = row.get(model_field.name, '')
+                    val = row.get(model_field.name, None) or ''
                     val = getattr(val, 'id', val) # if ForeignKey, we need id
                     if model_field.__class__.__name__ == 'DecimalField':
-                        val = ('%.' + str(model_field.decimal_places) + 'f') % float(val)
+                        val = ('%.' + str(model_field.decimal_places) + 'f') % float(val or 0)
                     f.write(str(val))
                     f.write(field.delimiter)
 
