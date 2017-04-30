@@ -1,6 +1,10 @@
 # django-sql-server-bcp
 A utility for using mssql-tools BCP command with Django models.
 
+#Installation
+
+`pip install django-sql-server-bcp`
+
 #Usage
 
 Example Django model:
@@ -19,7 +23,9 @@ class StockPrice(models.Model):
 
 ```
 
-Example BCP usage with `StockPrice` Model:
+**Example BCP usage with `StockPrice` Model.** 
+
+Create a dict with the properties of your model. Then save via BCP:
 
 ```python
 from random import radom
@@ -35,10 +41,21 @@ for i in range(1, row_count):
 
 bcp = BCP(StockPrice)
 bcp.save(rows)
-cp.save(rows)
+print cp.save(rows)
 
 
 ```
+
+You should output similar to the following:
+
+```
+Starting copy...
+
+499 rows copied.
+Network packet size (bytes): 4096
+Clock Time (ms.) Total     : 10     Average : (49900.0 rows per sec.)
+```
+
 #Caveats
 
 - String data cannot contain commas or newlines because bulk data file format is flimsy CSV.

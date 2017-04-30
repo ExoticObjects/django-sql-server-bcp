@@ -51,6 +51,8 @@ class BCP(object):
 
         _log.debug(import_result)
 
+        return import_result
+
     def set_target_model(self, target_model):
         self.target_model = target_model
         db_settings = settings.DATABASES[target_model.objects.db]
