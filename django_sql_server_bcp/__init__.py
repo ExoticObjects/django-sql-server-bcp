@@ -41,7 +41,6 @@ class BCP(object):
                     val = getattr(val, 'id', val) # if ForeignKey, we need id
                     if model_field.__class__.__name__ == 'DecimalField':
                         val = ('%.' + str(model_field.decimal_places) + 'f') % float(val)
-                    print val, field.field_length
                     f.write(str(val))
                     f.write(field.delimiter)
 
