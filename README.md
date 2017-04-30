@@ -28,8 +28,7 @@ class StockPrice(models.Model):
 Create a dict with the properties of your model. Then save via BCP:
 
 ```python
-from random import radom
-
+from random import random
 
 rows = []
 for i in range(1, row_count):
