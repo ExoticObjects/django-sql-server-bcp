@@ -47,12 +47,14 @@ class StockPrice(models.Model):
 
 ```
 
-**Example BCP usage with `StockPrice` Model.** 
+**Example BCP usage with `StockPrice` Model.**
 
 Create a dict with the properties of your model. Then save via BCP:
 
 ```python
 from random import random
+from models import StockPrice
+
 
 rows = []
 for i in range(1, row_count):
@@ -69,7 +71,7 @@ print cp.save(rows)
 
 ```
 
-You should output similar to the following:
+You should see output similar to the following:
 
 ```
 Starting copy...
