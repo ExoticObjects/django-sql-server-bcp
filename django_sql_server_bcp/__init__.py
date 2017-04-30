@@ -66,7 +66,7 @@ class BCP(object):
         if DB_DSN:
             self._db_args.append('-D')
 
-        self._field_column_map = {f.db_column: f.name for f in target_model._meta.fields}
+        self._field_column_map = {(f.db_column or f.name): f.name for f in target_model._meta.fields}
 
     def _make_format(self):
         bcp_format = BCPFormat()
