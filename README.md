@@ -13,7 +13,7 @@ If on Linux or Mac, install mssql-tools
 - For Linux: https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools
 
 
-On Linux, you must use Microsoft's driver in your odbc.ini. Otherwise, you'll get error `The DSN specified an unsupported driver.`. 
+1. On Linux, you must use Microsoft's driver in your odbc.ini. Otherwise, you'll get error `The DSN specified an unsupported driver.`. 
 If you're using pyodbc, your driver might look like:
 
 ```
@@ -28,6 +28,10 @@ Change it to (e.g. on Ubuntu):
 [my_dsn_name]
 Driver = /opt/microsoft/msodbcsql/lib64/libmsodbcsql-13.1.so.6.0
 ```
+
+2. Make sure `bcp` is is accessible to execute
+
+   `sudo ln -s /opt/mssql-tools/bin/bcp /usr/local/bin/bcp`
 
 ## Usage
 
@@ -86,3 +90,36 @@ Clock Time (ms.) Total     : 10     Average : (49900.0 rows per sec.)
 - String data cannot contain commas or newlines because bulk data file format is flimsy CSV.
 - Untested with long strings, dates, binary data.
 
+## Troublehooting
+
+### Unable to open BCP host data-file
+On Linux, if www-data can't create a format file, it's a real pain to troubleshoot. `bcp` wants to access a few files covertly and fails without telling you why.
+    - To turn on file access auditing, you may discover that `bcp` is trying to create a `/var/www/.odbc.ini` or access `/etc/localtime`
+
+```bash
+    # install auditd
+    sudo apt install auditd
+    # Turn on file access auditing for all files where success=0
+    sudo auditctl -w / -k bcp_debug
+    # Run bcp commend as www-data
+    # Then search audit log for failures
+    sudo ausearch --interpret --exit -13
+```
+
+Search the log for `success=no` and try to see what files bcp is being denied access to
+
+- For some reason, bcp tries to create `.odbc.ini` in www-data's home folder (e.g. /var/www/.odbc.ini). Make sure www-data's home folder is writeable by www-data
+- Another problem was that Microsoft docs say to pass `nul` to format command which, on Windows is a nul file but on Linux, bcp will try to open file named `nul` and fails with permission error. On Linux, pass `/dev/null` instead of `nul`.
+
+### BCP is hanging, stuck at "Starting copy..."
+
+Make sure you do not have any active transactions locking the table or hung transactions locking the table
+
+Check for transaction:
+
+```sql
+SELECT S.*
+FROM sys.dm_exec_requests R
+INNER JOIN sys.dm_exec_sessions S
+ON S.session_id = R.blocking_session_id;
+```

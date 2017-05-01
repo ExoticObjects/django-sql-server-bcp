@@ -1,9 +1,11 @@
-import re, os, logging, subprocess
+import re, os, logging, subprocess, platform
 from tempfile import NamedTemporaryFile
 from django.conf import settings
 
 
 _log = logging.getLogger(__name__)
+
+NULL_FILE = 'nul' if 'Windows' in platform.system() else '/dev/null'
 
 
 class BCP(object):
@@ -13,14 +15,15 @@ class BCP(object):
     '''
 
     target_model = None
-    bcp_path = 'bcp'
+    bcp_path = None
 
     _command_args_base = None
     _db_args = None
     _table_name = None
     _field_column_map = None
 
-    def __init__(self, target_model):
+    def __init__(self, target_model, bcp_path='bcp'):
+        self.bcp_path = bcp_path
         self.set_target_model(target_model)
 
     def save(self, rows):
@@ -29,7 +32,7 @@ class BCP(object):
         bcp_format = self._make_format()
 
         # Create a temporary file to hold bulk data
-        with NamedTemporaryFile(delete=False) as f:
+        with NamedTemporaryFile(delete=True) as f:
             outfile = '%s_%s.csv' % (f.name, self._table_name)
 
         # Write bulk data based on FORMAT file
@@ -97,10 +100,10 @@ class BCPFormat(object):
         '''
         Runs bcp FORMAT command to create a format file that will assist in creating the bulk data file
         '''
-        with NamedTemporaryFile(delete=False) as f:
-            format_file = f.name
-            format_args = cmd_args + ['format', 'nul', '-c', '-f', format_file, '-t,'] + db_args
-            _run_cmd(format_args)
+        with NamedTemporaryFile(delete=True) as f:
+            format_file = f.name + '.bcp-format'
+        format_args = cmd_args + ['format', NULL_FILE, '-c', '-f', format_file, '-t,'] + db_args
+        _run_cmd(format_args)
         self.load(format_file)
         return format_file
 
@@ -160,10 +163,13 @@ class BCPFormatRow(object):
 
 
 def _run_cmd(args):
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    returncode = process.wait()
-    out = process.stdout.read()
-    _log.debug(out)
+    proc = subprocess.Popen(args, stderr=subprocess.STDOUT)
+    output, err = proc.communicate()
+    returncode = proc.wait()
+    if output:
+        _log.debug(output)
     if returncode != 0:
+        # Remove password so it doesn't show in logs
+        args.pop(args.index('-P') + 1)
         raise Exception('BCP command failed: %s' % args)
-    return out
+    return output
