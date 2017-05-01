@@ -13,7 +13,7 @@ If on Linux or Mac, install mssql-tools
 - For Linux: https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-setup-tools
 
 
-1. On Linux, you must use Microsoft's driver in your odbc.ini. Otherwise, you'll get error `The DSN specified an unsupported driver.`. 
+1. On Linux, you must use Microsoft's driver in your odbc.ini. Otherwise, you'll get error `The DSN specified an unsupported driver.`.
 If you're using pyodbc, your driver might look like:
 
 ```
@@ -32,6 +32,9 @@ Driver = /opt/microsoft/msodbcsql/lib64/libmsodbcsql-13.1.so.6.0
 2. Make sure `bcp` is is accessible to execute
 
    `sudo ln -s /opt/mssql-tools/bin/bcp /usr/local/bin/bcp`
+
+3. On Windows, using BCP via ODBC DNS name has proven to be painful or straight up broken. *django-sql-server-bcp* will prefer to connect via server HOST if available. So please set `HOST` in your django DATABSAES settings if you're having problems with getting BCP to work on Windows. You can leave `dsn` name in your django settings.
+
 
 ## Usage
 
@@ -92,6 +95,22 @@ Clock Time (ms.) Total     : 10     Average : (49900.0 rows per sec.)
 - Can't be used in a django transaction involving the same table that BCP is accessing - you'll end up locking the table and BCP won't be able to get a lock on it and BCP will wait indefinitely.
 
 ## Troublehooting
+
+
+### The DSN specified an unsupported driver
+
+- On Linux, see Requirements above
+- On Windows, when you setup your ODBC data source in Windows, select "SQL Server Native Client XX". Not "SQL Server" or "ODBC Driver XX for SQL Server". For more info: https://docs.microsoft.com/en-us/sql/relational-databases/native-client-odbc-bulk-copy-operations/performing-bulk-copy-operations-odbc
+
+### The specified DSN contains an architecture mismatch between the Driver and Application
+
+In Windows, This usually means BCP is 32-bit and you've trying to use a 64-bit ODBC connection. Add your ODBC connection under both 32-bit and 64-bit ODBC managers.
+
+### Could not find stored procedure 'sp_describe_first_result_set'.
+
+https://connect.microsoft.com/SQLServer/feedback/details/2777154/attempt-to-use-bcp-2016-to-export-from-sql-2008-or-earlier-fails-with-obscure-error-message
+
+> This error is due to the version of ODBC driver you are using: version 13. You can resolve this issue buy uninstalling the version from Program and features, and install the version 13.1 you can find: https://www.microsoft.com/en-us/download/details.aspx?id=53339
 
 ### Unable to open BCP host data-file
 On Linux, if www-data can't create a format file, it's a real pain to troubleshoot. `bcp` wants to access a few files covertly and fails without telling you why.

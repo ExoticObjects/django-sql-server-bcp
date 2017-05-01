@@ -65,15 +65,17 @@ class BCP(object):
         self.target_model = target_model
         db_settings = settings.DATABASES[target_model.objects.db]
         self._table_name = target_model._meta.db_table
+        HOST = db_settings.get('HOST')
         DB_DSN = db_settings.get('OPTIONS', {}).get('dsn')
         full_table_name = '%s.dbo.%s' % (db_settings['NAME'], self._table_name)
         self._command_args_base = [self.bcp_path, full_table_name]
         self._db_args = [
-            '-S', DB_DSN or db_settings.get('HOST'),
+             # prefer HOST over DSN because BCP is VERY PICKY with DSN connections on Windows
+            '-S', HOST or DB_DSN,
             '-U', db_settings['USER'],
             '-P', db_settings.get('PASSWORD')]
 
-        if DB_DSN:
+        if not HOST and DB_DSN:
             self._db_args.append('-D')
 
         self._field_column_map = {(f.db_column or f.name): f for f in target_model._meta.fields}
