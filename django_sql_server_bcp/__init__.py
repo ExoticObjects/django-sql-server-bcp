@@ -6,6 +6,7 @@ from django.conf import settings
 _log = logging.getLogger(__name__)
 
 NULL_FILE = 'nul' if 'Windows' in platform.system() else '/dev/null'
+BCP_EXE = 'bcp' if 'Windows' in platform.system() else '/opt/mssql-tools/bin/bcp'
 
 
 class BCP(object):
@@ -22,7 +23,7 @@ class BCP(object):
     _table_name = None
     _field_column_map = None
 
-    def __init__(self, target_model, bcp_path='bcp'):
+    def __init__(self, target_model, bcp_path=BCP_EXE):
         self.bcp_path = bcp_path
         self.set_target_model(target_model)
 
