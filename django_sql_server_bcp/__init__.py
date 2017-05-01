@@ -38,7 +38,8 @@ class BCP(object):
         # Write bulk data based on FORMAT file
         _log.debug('Writing bulk data file %s', outfile)
 
-        with open(outfile, 'w') as f:
+        # Open in binary mode so that newlines don't get doubled on Windows: http://stackoverflow.com/a/4025988/193244
+        with open(outfile, 'wb') as f:
             for row in rows:
                 for field in bcp_format.fields:
                     model_field = self._field_column_map[field.column_name]
@@ -70,7 +71,7 @@ class BCP(object):
         full_table_name = '%s.dbo.%s' % (db_settings['NAME'], self._table_name)
         self._command_args_base = [self.bcp_path, full_table_name]
         self._db_args = [
-             # prefer HOST over DSN because BCP is VERY PICKY with DSN connections on Windows
+             # prefer host over DSN because BCP is VERY PICKY with DSN connection on Windows
             '-S', HOST or DB_DSN,
             '-U', db_settings['USER'],
             '-P', db_settings.get('PASSWORD')]
@@ -123,7 +124,7 @@ class BCPFormat(object):
 
         for line in lines:
             # Get rid of mulitple spaces
-            line = re.sub(' +', ' ', line)
+            line = re.sub(' +', ' ', line.strip())
             row_format = BCPFormatRow(line.split(' '))
             fields.append(row_format)
 
@@ -165,12 +166,14 @@ class BCPFormatRow(object):
 
 
 def _run_cmd(args):
-    proc = subprocess.Popen(args, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = proc.communicate()
     returncode = proc.wait()
+    _log.debug('err %s',err)
+    _log.debug('returncoede %s', returncode)
     if output:
         _log.debug(output)
-    if returncode != 0:
+    if returncode != 0 or 'Error =' in output:
         # Remove password so it doesn't show in logs
         args.pop(args.index('-P') + 1)
         raise Exception('BCP command failed: %s' % args)
