@@ -89,6 +89,7 @@ Clock Time (ms.) Total     : 10     Average : (49900.0 rows per sec.)
 
 - String data cannot contain commas or newlines because bulk data file format is flimsy CSV.
 - Untested with long strings, dates, binary data.
+- Can't be used in a django transaction involving the same table that BCP is accessing - you'll end up locking the table and BCP won't be able to get a lock on it and BCP will wait indefinitely.
 
 ## Troublehooting
 
@@ -113,7 +114,8 @@ Search the log for `success=no` and try to see what files bcp is being denied ac
 
 ### BCP is hanging, stuck at "Starting copy..."
 
-Make sure you do not have any active transactions locking the table or hung transactions locking the table
+- Make sure you are not calling BCP from within a django transaction that accessing the same table as BCP
+- Make sure you do not have any active transactions locking the table or hung transactions locking the table
 
 Check for transaction:
 

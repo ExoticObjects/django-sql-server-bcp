@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-sql-server-bcp',
-    version='0.1.4',
+    version='0.1.5',
     author='Exotic Objects LLC',
     author_email='git@extc.co',
     license='MIT',
