@@ -33,6 +33,8 @@ class BCP(object):
             outfile = '%s_%s.csv' % (f.name, self._table_name)
 
         # Write bulk data based on FORMAT file
+        _log.debug('Writing bulk data file %s', outfile)
+
         with open(outfile, 'w') as f:
             for row in rows:
                 for field in bcp_format.fields:
@@ -45,6 +47,7 @@ class BCP(object):
                     f.write(field.delimiter)
 
         # Do bulk import via bcp
+        _log.debug('Calling bcp')
         import_result = _run_cmd(self._command_args_base + ['IN', outfile] + self._db_args + ['-f', bcp_format.filename])
 
         # Cleanup temp files
