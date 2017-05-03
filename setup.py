@@ -8,7 +8,7 @@ setup(
     author='Exotic Objects LLC',
     author_email='git@extc.co',
     license='MIT',
-    url='https://github.com/ExoticObjects/ddjango-sql-server-bcp',
+    url='https://github.com/ExoticObjects/django-sql-server-bcp',
     include_package_data=True,
     long_description=open('README.md').read(),
     description='Utility for using mssql-tools BCP command with Django models',
