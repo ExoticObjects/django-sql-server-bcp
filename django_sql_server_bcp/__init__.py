@@ -5,8 +5,19 @@ from django.conf import settings
 
 _log = logging.getLogger(__name__)
 
-NULL_FILE = 'nul' if 'Windows' in platform.system() else '/dev/null'
-BCP_EXE = 'bcp' if 'Windows' in platform.system() else '/opt/mssql-tools/bin/bcp'
+
+PLATFORM = platform.system().lower()
+IS_WINDOWS = 'windows' in PLATFORM
+IS_MAC = 'darwin' in PLATFORM
+IS_LINUX = 'linux' in PLATFORM
+NULL_FILE = 'nul' if IS_WINDOWS else '/dev/null'
+
+if IS_LINUX:
+    BCP_EXE = '/opt/mssql-tools/bin/bcp'
+elif IS_MAC:
+    BCP_EXE = '/usr/local/bin/bcp'
+else:
+    BCP_EXE = 'bcp'
 
 
 class BCP(object):
