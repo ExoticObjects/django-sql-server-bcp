@@ -173,8 +173,8 @@ def _run_cmd(args):
     proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = proc.communicate()
     returncode = proc.wait()
-    _log.debug('err %s',err)
-    _log.debug('returncoede %s', returncode)
+    _log.debug('err %s', err)
+    _log.debug('returncode %s', returncode)
     if output:
         _log.debug(output)
     if returncode != 0 or 'Error =' in output:
