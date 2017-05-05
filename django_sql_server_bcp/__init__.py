@@ -1,24 +1,16 @@
 import re, os, logging, subprocess, platform
 from tempfile import NamedTemporaryFile
 from django.conf import settings
-
+from distutils.spawn import find_executable
 
 _log = logging.getLogger(__name__)
 
-
-PLATFORM = platform.system().lower()
-IS_WINDOWS = 'windows' in PLATFORM
-IS_MAC = 'darwin' in PLATFORM
-IS_LINUX = 'linux' in PLATFORM
+IS_WINDOWS = 'windows' in platform.system().lower()
 NULL_FILE = 'nul' if IS_WINDOWS else '/dev/null'
 
-if IS_LINUX:
-    BCP_EXE = '/opt/mssql-tools/bin/bcp'
-elif IS_MAC:
-    BCP_EXE = '/usr/local/bin/bcp'
-else:
-    BCP_EXE = 'bcp'
-
+# Note: this is OK for win32 because bcp is an EXE
+# Note: if targeting Python 3.x, may want to consider shutil.which()
+BCP_EXE = find_executable('bcp')
 
 class BCP(object):
 
