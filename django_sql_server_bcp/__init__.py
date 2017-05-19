@@ -1,6 +1,7 @@
 import re, os, logging, subprocess, platform
 from tempfile import NamedTemporaryFile
 from django.conf import settings
+from django.db.models import ForeignKey, DecimalField
 from distutils.spawn import find_executable
 
 _log = logging.getLogger(__name__)
@@ -25,6 +26,8 @@ class BCP(object):
     _db_args = None
     _table_name = None
     _field_column_map = None
+    _cleanup_files = True
+
 
     def __init__(self, target_model, bcp_path=BCP_EXE):
         self.bcp_path = bcp_path
@@ -48,8 +51,10 @@ class BCP(object):
                 for field in bcp_format.fields:
                     model_field = self._field_column_map[field.column_name]
                     val = row.get(model_field.name, None) or ''
+                    if not val and isinstance(model_field, ForeignKey):
+                        val = row.get(model_field.name + '_id', None) or ''
                     val = getattr(val, 'id', val) # if ForeignKey, we need id
-                    if model_field.__class__.__name__ == 'DecimalField':
+                    if isinstance(model_field, DecimalField):
                         val = ('%.' + str(model_field.decimal_places) + 'f') % float(val or 0)
                     f.write(str(val))
                     f.write(field.delimiter)
@@ -59,8 +64,9 @@ class BCP(object):
         import_result = _run_cmd(self._command_args_base + ['IN', outfile] + self._db_args + ['-f', bcp_format.filename])
 
         # Cleanup temp files
-        os.remove(outfile)
-        os.remove(bcp_format.filename)
+        if self._cleanup_files:
+            os.remove(outfile)
+            os.remove(bcp_format.filename)
 
         _log.debug(import_result)
 
