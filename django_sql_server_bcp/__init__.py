@@ -68,8 +68,6 @@ class BCP(object):
             os.remove(outfile)
             os.remove(bcp_format.filename)
 
-        _log.debug(import_result)
-
         return import_result
 
     def set_target_model(self, target_model):
@@ -89,7 +87,7 @@ class BCP(object):
         if not HOST and DB_DSN:
             self._db_args.append('-D')
 
-        self._field_column_map = {(f.db_column or f.name): f for f in target_model._meta.fields}
+        self._field_column_map = {(f.column): f for f in target_model._meta.fields}
 
     def _make_format(self):
         bcp_format = BCPFormat()
