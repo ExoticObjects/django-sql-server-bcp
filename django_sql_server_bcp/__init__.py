@@ -60,7 +60,7 @@ class BCP(object):
                     f.write(field.delimiter)
 
         # Do bulk import via bcp
-        _log.debug('Calling bcp')
+        _log.debug('Calling bcp (%s)', BCP_EXE)
         import_result = _run_cmd(self._command_args_base + ['IN', outfile] + self._db_args + ['-f', bcp_format.filename])
 
         # Cleanup temp files
